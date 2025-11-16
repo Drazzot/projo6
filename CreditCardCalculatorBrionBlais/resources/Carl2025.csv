@@ -1,0 +1,11 @@
+# sample Carl transactions for 2025 (three months example)
+2025-01-15,Groceries,600.00
+2025-01-15,Gas,100.00
+2025-01-15,Other,300.00
+2025-02-15,Groceries,600.00
+2025-02-15,Gas,100.00
+2025-02-15,Other,300.00
+2025-03-15,Groceries,600.00
+2025-03-15,Gas,100.00
+2025-03-15,Other,300.00
+# Add more rows as needed
