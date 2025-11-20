@@ -1,0 +1,61 @@
+CS 301 		
+Credit Card Calculator Use Case
+ Title Calculating Credit Costs for Regular Credit Card Usage and Common Payment Strategies
+ Rationale/Description/Goal
+ The user wants to understand the impact of different payment strategies for purchase they 
+made with their credit card over a period of time. The user may start with an existing balance 
+that is greater than 0. The purpose is to quantify the cost of credit in terms of interest and fees 
+compared to the gains as earned rewards.
+ Actor/User: Regular user
+ Preconditions:
+ A CSV file with transactions for a time period at least one month long to allow for a meaningful 
+computation and valid data for transactions (date, category, amount in $). Date is formatted 
+yyyy-mm-dd, category is one of the three Groceries, Gas, or Other.
+ Main Success Scenario:
+ 1. User starts program
+ 2. System starts and shows main screen with instructions
+ 3. User selects an input csv file
+ 4. System reads data from file, confirms #transactions it found in the file, total amount of 
+purchases and time interval with dates of first and last transaction such that user can 
+understand what has been loaded
+ 5. User chooses settings to process the data (here: proceeds with default settings)
+ 6. System calculates interest and fees for the default settings (payment strategy, APR, fees, 
+due date, grace period, reward percentage per category) and shows a summary statistics 
+of beginning balance, ending balance, total payments, total interest, total fees, total 
+rewards, all of these values are given in $. Preferably visualized by some appropriate mean.
+ 7. User closes the program. 
+8. The program terminates.
+ Post conditions:
+ No changes to CSV file, this is read access only. 
+Variation #1: File not found, not accessible, wrong format
+ In step 3, the user selects a file that can’t be opened or the date is not in the correct format. 
+The System responds with a corresponding error message and allows the user to either close 
+the program (Step 7) or select another file (Step 3).
+ Variation #2 User selects parameters
+ In step 5, the user selects a particular starting date and duration (months, years), the APR, the 
+values for late and returned payment fees, the monthly due date and the length of the grace 
+period. The user sets a particular $ value for the starting balance. The user selects the default 
+payment policy (Light Revolver) and default settings for reward categories (3% groceries, 2% 
+gas/ev charging, 1% all others). The user selects the interest calculation method Average Daily 
+Balance method or the Synchrony method. The system continues with step 6 but for the 
+selected value settings.
+ Variation #3 User selects a payment policy.
+ In variation #2, step 5: the user selects parameters and one of the following payment 
+strategies: 
+- Early Transactor: always pay the full statement balance at the first day of the grace period 
+avoiding fees and interest. The starting balance is selected as $0. Occasionally uses rewards 
+for gift cards, not for payments.- Wall Street Transactor: always pay the full statement balance at the last day of the grace 
+period avoiding fees and interest. Uses rewards each month for statement credit (i.e., as a 
+partial payment that reduces the statement balance). The starting balance is selected as $0.- Light Revolver: pays five months the minimum payment each month and pays after the 6th 
+month the full statement balance. After that it repeats. All payments are on the last day of the 
+grace period. In this way, the account is always in good standing, there are no late fees but 
+interest accumulates till the account is paid in full.  The starting balance is selected as 
+$1000. The customer uses the rewards for gift cards, not for payments.- Heavy Revolver: only pays the minimum payment each month. Pays 5 times on the last day 
+of the grace period, then pays 5 days late incurring late fees and an increased penalty APR. 
+The starting balance is selected as $5000.
+ The system continues with step 6.
+ Variation #4: Detailed visualization
+ After step 6, the user selects an option to dig deeper into the data and selects if the level of 
+detail is daily, weekly, monthly, or yearly. The system shows a graphical visualization of 
+balances, interest and fees as these values develop over time. After that the user continues 
+with step 7.

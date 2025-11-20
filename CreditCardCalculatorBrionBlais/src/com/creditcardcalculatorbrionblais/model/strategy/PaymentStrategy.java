@@ -1,15 +1,18 @@
 package com.creditcardcalculatorbrionblais.model.strategy;
 
-import com.creditcardcalculatorbrionblais.model.account.Account;
-import com.creditcardcalculatorbrionblais.model.transaction.Transaction;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 
-import java.time.YearMonth;
-import java.util.List;
-
+/**
+ * PaymentStrategy: decide payment amount and date for each statement cycle.
+ */
 public interface PaymentStrategy {
     /**
-     * Given an account and a statement period, return list of payments to schedule.
-     * Amounts should be positive numbers representing payments (they will be subtracted from balance).
+     * Called each billing cycle to compute payment amount and the date (relative to cycle).
+     * @param statementBalance the amount due on statement
+     * @param cycleStart first day of cycle
+     * @param cycleEnd last day of cycle
+     * @return PaymentInstruction
      */
-    List<Transaction> generatePayments(Account account, YearMonth statementPeriod);
+    PaymentInstruction nextPayment(BigDecimal statementBalance, LocalDate cycleStart, LocalDate cycleEnd);
 }

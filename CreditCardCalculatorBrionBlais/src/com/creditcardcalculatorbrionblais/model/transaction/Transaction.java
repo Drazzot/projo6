@@ -2,40 +2,24 @@ package com.creditcardcalculatorbrionblais.model.transaction;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.Objects;
 
-/**
- * Immutable Transaction class
- */
-public final class Transaction implements Comparable<Transaction> {
-    public enum Category { GROCERIES, GAS, OTHER, PAYMENT }
-
+public final class Transaction {
     private final LocalDate date;
-    private final Category category;
-    private final BigDecimal amount; // positive for purchases; positive for payments (use isPayment flag)
+    private final String category; // Groceries, Gas, Other
+    private final BigDecimal amount; // positive for purchases
 
-    public Transaction(LocalDate date, Category category, BigDecimal amount) {
-        Objects.requireNonNull(date);
-        Objects.requireNonNull(category);
-        Objects.requireNonNull(amount);
+    public Transaction(LocalDate date, String category, BigDecimal amount) {
         this.date = date;
         this.category = category;
-        this.amount = amount.setScale(2, BigDecimal.ROUND_HALF_UP);
+        this.amount = amount;
     }
 
     public LocalDate getDate() { return date; }
-    public Category getCategory() { return category; }
+    public String getCategory() { return category; }
     public BigDecimal getAmount() { return amount; }
-
-    public boolean isPayment() { return category == Category.PAYMENT || amount.signum() < 0; }
-
-    @Override
-    public int compareTo(Transaction o) {
-        return this.date.compareTo(o.date);
-    }
 
     @Override
     public String toString() {
-        return String.format("%s %s %s", date, category, amount.toPlainString());
+        return "Transaction{" + date + ", " + category + ", " + amount + "}";
     }
 }

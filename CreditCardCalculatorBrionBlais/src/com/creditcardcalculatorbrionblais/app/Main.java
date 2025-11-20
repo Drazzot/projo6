@@ -1,15 +1,17 @@
 package com.creditcardcalculatorbrionblais.app;
 
-import com.creditcardcalculatorbrionblais.controller.MainWindowController;
+import javax.swing.SwingUtilities;
+import com.creditcardcalculatorbrionblais.view.CreditCardCalculatorApp;
 
-import javax.swing.*;
-
+/**
+ * Simple entry point for the CreditCardCalculatorBrionBlais application.
+ * Launches the Swing UI defined in CreditCardCalculatorApp.
+ */
 public class Main {
     public static void main(String[] args) {
-        // Ensure UI runs on Event Dispatch Thread
         SwingUtilities.invokeLater(() -> {
-            MainWindowController controller = new MainWindowController();
-            controller.start();
+            CreditCardCalculatorApp app = new CreditCardCalculatorApp();
+            app.setVisible(true);
         });
     }
 }
