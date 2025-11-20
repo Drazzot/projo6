@@ -1,0 +1,8 @@
+com.creditcardcalculatorbrionblais.app
+com.creditcardcalculatorbrionblais.config
+com.creditcardcalculatorbrionblais.controller
+com.creditcardcalculatorbrionblais.model.account
+com.creditcardcalculatorbrionblais.model.strategy
+com.creditcardcalculatorbrionblais.model.transaction
+com.creditcardcalculatorbrionblais.tests
+com.creditcardcalculatorbrionblais.view
