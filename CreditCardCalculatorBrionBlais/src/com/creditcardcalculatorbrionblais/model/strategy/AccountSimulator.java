@@ -8,16 +8,51 @@ import java.util.stream.Collectors;
 import com.creditcardcalculatorbrionblais.model.transaction.*;
 
 /**
- * Simulation engine supporting:
- * - Synchrony daily balance interest calculation (daily rate = APR / 365)
- * - Minimum interest charge enforcement
- * - Fees (paper statement, late/returned) and promotional fee
- * - Rewards accumulation using RewardPolicy
- *
- * This is a simplified but faithful implementation of daily-balance described in the UseCaseDescription and Synchrony file.
+ * Core simulation engine for credit card account behavior.
+ * 
+ * <p>This simulator implements a month-by-month account simulation that models:</p>
+ * <ul>
+ *   <li>Transaction processing and balance updates</li>
+ *   <li>Interest calculation using either Synchrony daily balance or average daily balance methods</li>
+ *   <li>Fee application (paper statement, late payment fees)</li>
+ *   <li>Reward accumulation based on purchase categories</li>
+ *   <li>Payment processing according to configurable strategies</li>
+ * </ul>
+ * 
+ * <p>The simulation processes transactions chronologically, grouped by calendar month,
+ * applying all relevant charges and credits to maintain an accurate running balance.</p>
+ * 
+ * <p>Example usage:</p>
+ * <pre>
+ * AccountSimulator sim = new AccountSimulator(
+ *     transactions,
+ *     RewardPolicy.defaultPolicy(),
+ *     new FeeSchedule(),
+ *     new WallStreetTransactor(),
+ *     InterestMethod.SYNCHRONY_DAILY_BALANCE,
+ *     BigDecimal.ZERO,
+ *     LocalDate.of(2024, 1, 1),
+ *     LocalDate.of(2024, 12, 31)
+ * );
+ * Summary summary = sim.run();
+ * </pre>
+ * 
+ * @author Brion Blais
+ * @version 1.0
+ * @since 2024-01-01
  */
 public class AccountSimulator {
-    public enum InterestMethod { SYNCHRONY_DAILY_BALANCE, AVERAGE_DAILY_BALANCE }
+    
+    /**
+     * Enumeration of supported interest calculation methods.
+     */
+    public enum InterestMethod { 
+        /** Synchrony daily balance method: compounds interest daily */
+        SYNCHRONY_DAILY_BALANCE, 
+        
+        /** Average daily balance method: calculates interest on average balance */
+        AVERAGE_DAILY_BALANCE 
+    }
 
     private final List<Transaction> transactions;
     private final RewardPolicy rewardPolicy;
@@ -28,22 +63,63 @@ public class AccountSimulator {
     private final LocalDate startDate;
     private final LocalDate endDate;
     
+    /**
+     * Container for simulation results including totals and time-series data.
+     * 
+     * <p>This class holds all computed values from a simulation run, including:</p>
+     * <ul>
+     *   <li>Beginning and ending balances</li>
+     *   <li>Total payments, interest, fees, and rewards</li>
+     *   <li>Time-series data for visualization (dates, balances, interest, fees, payments)</li>
+     * </ul>
+     */
     public static class Summary {
+        /** The balance at the start of the simulation */
         public BigDecimal beginningBalance = BigDecimal.ZERO;
+        
+        /** The balance at the end of the simulation */
         public BigDecimal endingBalance = BigDecimal.ZERO;
+        
+        /** Total amount paid during the simulation */
         public BigDecimal totalPayments = BigDecimal.ZERO;
+        
+        /** Total interest charged during the simulation */
         public BigDecimal totalInterest = BigDecimal.ZERO;
+        
+        /** Total fees charged during the simulation */
         public BigDecimal totalFees = BigDecimal.ZERO;
+        
+        /** Total rewards earned during the simulation */
         public BigDecimal totalRewards = BigDecimal.ZERO;
         
+        /** List of dates for time-series visualization */
         public List<LocalDate> dates = new ArrayList<>();
+        
+        /** List of balances corresponding to each date */
         public List<BigDecimal> balances = new ArrayList<>();
+        
+        /** List of interest amounts for each period */
         public List<BigDecimal> interestSeries = new ArrayList<>();
+        
+        /** List of fee amounts for each period */
         public List<BigDecimal> feeSeries = new ArrayList<>();
+        
+        /** List of payment amounts for each period */
         public List<BigDecimal> paymentSeries = new ArrayList<>();
-
     }
 
+    /**
+     * Constructs a new AccountSimulator with all necessary configuration.
+     * 
+     * @param transactions the list of transactions to process, must not be null
+     * @param rewardPolicy the policy for calculating rewards, must not be null
+     * @param fees the fee schedule (currently unused but available for extension)
+     * @param paymentStrategy the strategy for determining payments, must not be null
+     * @param interestMethod the method for calculating interest, must not be null
+     * @param startingBalance the initial balance, null is treated as zero
+     * @param startDate the first date of simulation, must not be null
+     * @param endDate the last date of simulation, must not be null
+     */
     public AccountSimulator(List<Transaction> transactions,
                             RewardPolicy rewardPolicy,
                             FeeSchedule fees,
@@ -63,9 +139,28 @@ public class AccountSimulator {
     }
 
     /**
-     * Runs a month-by-month simulation from startDate to endDate inclusive. For brevity this implementation:
-     * - groups transactions into monthly cycles (calendar month)
-     * - uses simplified handling of fees and payments
+     * Executes the simulation and returns a summary of results.
+     * 
+     * <p>The simulation proceeds month-by-month from startDate to endDate (inclusive),
+     * processing transactions, calculating interest and fees, applying rewards, and
+     * handling payments according to the configured strategy.</p>
+     * 
+     * <p>For each month, the simulation:</p>
+     * <ol>
+     *   <li>Applies all transactions occurring in that month</li>
+     *   <li>Calculates and accumulates rewards</li>
+     *   <li>Applies paper statement fee if balance &gt; $2.50</li>
+     *   <li>Calculates interest for the month</li>
+     *   <li>Enforces minimum interest charge ($2.00) if applicable</li>
+     *   <li>Determines payment amount and date via payment strategy</li>
+     *   <li>Applies late fee if payment is after due date</li>
+     *   <li>Records time-series data for visualization</li>
+     *   <li>Applies the payment to reduce balance</li>
+     * </ol>
+     * 
+     * <p>All monetary values in the returned Summary are rounded to 2 decimal places.</p>
+     * 
+     * @return a Summary object containing all simulation results, never null
      */
     public Summary run() {
         Summary s = new Summary();
@@ -112,9 +207,6 @@ public class AccountSimulator {
             s.totalInterest = s.totalInterest.add(interestForCycle);
             currentBalance = currentBalance.add(interestForCycle);
 
-
-
-                    
             // determine payment for cycle using strategy
             PaymentInstruction pi = paymentStrategy.nextPayment(currentBalance, cycleStart, cycleEnd);
             BigDecimal payment = pi.getAmount().min(currentBalance); // cannot pay more than current balance
@@ -139,7 +231,6 @@ public class AccountSimulator {
             // Record payment
             s.paymentSeries.add(payment);
 
-
             cursor = cursor.plusMonths(1);
         }
 
@@ -152,6 +243,22 @@ public class AccountSimulator {
         return s;
     }
 
+    /**
+     * Calculates interest for a single month using simplified daily rate model.
+     * 
+     * <p>This is a simplified implementation that assumes the balance remains
+     * constant throughout the month. The calculation is:</p>
+     * <pre>
+     * dailyRate = APR / 365
+     * interest = balance * dailyRate * daysInMonth
+     * </pre>
+     * 
+     * @param balance the balance for the month
+     * @param cycleStart the first day of the month
+     * @param cycleEnd the last day of the month
+     * @param apr the annual percentage rate
+     * @return the calculated interest amount for the month
+     */
     private BigDecimal calculateInterestForMonth(BigDecimal balance, LocalDate cycleStart, LocalDate cycleEnd, BigDecimal apr) {
         // daily rate = APR / 365
         BigDecimal days = new BigDecimal(cycleEnd.getDayOfMonth());
