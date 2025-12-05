@@ -62,6 +62,8 @@ public class AccountSimulator {
     private final BigDecimal startingBalance;
     private final LocalDate startDate;
     private final LocalDate endDate;
+    private final InterestCalculator interestCalculator;
+
     
     /**
      * Container for simulation results including totals and time-series data.
@@ -120,14 +122,16 @@ public class AccountSimulator {
      * @param startDate the first date of simulation, must not be null
      * @param endDate the last date of simulation, must not be null
      */
-    public AccountSimulator(List<Transaction> transactions,
-                            RewardPolicy rewardPolicy,
-                            FeeSchedule fees,
-                            PaymentStrategy paymentStrategy,
-                            InterestMethod interestMethod,
-                            BigDecimal startingBalance,
-                            LocalDate startDate,
-                            LocalDate endDate) {
+    public AccountSimulator(
+            List<Transaction> transactions,
+            RewardPolicy rewardPolicy,
+            FeeSchedule fees,
+            PaymentStrategy paymentStrategy,
+            InterestMethod interestMethod,
+            BigDecimal startingBalance,
+            LocalDate startDate,
+            LocalDate endDate
+    ) {
         this.transactions = new ArrayList<>(transactions);
         this.rewardPolicy = rewardPolicy;
         this.fees = fees;
@@ -136,8 +140,12 @@ public class AccountSimulator {
         this.startingBalance = startingBalance == null ? BigDecimal.ZERO : startingBalance;
         this.startDate = startDate;
         this.endDate = endDate;
+
+        this.interestCalculator = createInterestCalculator(interestMethod);
     }
 
+
+    
     /**
      * Executes the simulation and returns a summary of results.
      * 
@@ -197,8 +205,14 @@ public class AccountSimulator {
                 currentBalance = currentBalance.add(FeeSchedule.PAPER_STATEMENT_FEE);
             }
 
-            // calculate interest for the cycle using daily model
-            BigDecimal interestForCycle = calculateInterestForMonth(currentBalance, cycleStart, cycleEnd, FeeSchedule.APR_PURCHASES);
+            BigDecimal interestForCycle = interestCalculator.calculateInterest(
+            	    currentBalance,
+            	    cycleStart,
+            	    cycleEnd,
+            	    FeeSchedule.APR_PURCHASES
+            	);
+
+            
             // enforce minimum interest charge if positive interest computed is < $2.00 and interest > 0
             if (interestForCycle.compareTo(BigDecimal.ZERO) > 0 && interestForCycle.compareTo(FeeSchedule.MIN_INTEREST_CHARGE) < 0) {
                 interestForCycle = FeeSchedule.MIN_INTEREST_CHARGE;
@@ -243,28 +257,17 @@ public class AccountSimulator {
         return s;
     }
 
-    /**
-     * Calculates interest for a single month using simplified daily rate model.
-     * 
-     * <p>This is a simplified implementation that assumes the balance remains
-     * constant throughout the month. The calculation is:</p>
-     * <pre>
-     * dailyRate = APR / 365
-     * interest = balance * dailyRate * daysInMonth
-     * </pre>
-     * 
-     * @param balance the balance for the month
-     * @param cycleStart the first day of the month
-     * @param cycleEnd the last day of the month
-     * @param apr the annual percentage rate
-     * @return the calculated interest amount for the month
-     */
-    private BigDecimal calculateInterestForMonth(BigDecimal balance, LocalDate cycleStart, LocalDate cycleEnd, BigDecimal apr) {
-        // daily rate = APR / 365
-        BigDecimal days = new BigDecimal(cycleEnd.getDayOfMonth());
-        BigDecimal dailyRate = apr.divide(new BigDecimal("365"), 10, RoundingMode.HALF_UP);
-        // For simplicity, assume balance unchanged during month (since full daily tracking requires per-transaction day-by-day addition)
-        BigDecimal interest = balance.multiply(dailyRate).multiply(days);
-        return interest.setScale(10, RoundingMode.HALF_UP).setScale(2, RoundingMode.HALF_UP);
+    
+    private InterestCalculator createInterestCalculator(InterestMethod method) {
+        switch (method) {
+            case SYNCHRONY_DAILY_BALANCE:
+                return new DailyBalanceInterestCalculator();
+            case AVERAGE_DAILY_BALANCE:
+                return new AverageDailyBalanceCalculator();
+            default:
+                throw new IllegalArgumentException("Unknown interest method: " + method);
+        }
     }
+    
+//   
 }
