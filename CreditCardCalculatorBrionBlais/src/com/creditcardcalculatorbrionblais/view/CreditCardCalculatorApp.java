@@ -149,11 +149,11 @@ public class CreditCardCalculatorApp extends JFrame {
         p.add(interestMethodBox);
 
         p.add(new JLabel("Start Date (YYYY-MM-DD):"));
-        startDateField = new JTextField();  // leave blank until CSV load
+        this.startDateField = new JTextField();  // leave blank until CSV load
         p.add(startDateField);
 
         p.add(new JLabel("End Date (YYYY-MM-DD):"));
-        endDateField = new JTextField();    // leave blank until CSV load
+        this.endDateField = new JTextField();    // leave blank until CSV load
         p.add(endDateField);
 
 
@@ -231,7 +231,8 @@ public class CreditCardCalculatorApp extends JFrame {
         if (res != JFileChooser.APPROVE_OPTION) return;
 
         try {
-            String path = chooser.getSelectedFile().getAbsolutePath();
+            
+        	String path = chooser.getSelectedFile().getAbsolutePath();
             try (FileReader fr = new FileReader(path)) {
                 transactions = TransactionReader.readFromCsv(fr);
             }
@@ -262,6 +263,8 @@ public class CreditCardCalculatorApp extends JFrame {
 
         startDateString = first.toString();
         endDateString = last.toString();
+        startDateField.setText(startDateString);
+        endDateField.setText(endDateString);
         
       
         return "Transactions Loaded\n" +
