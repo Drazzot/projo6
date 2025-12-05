@@ -90,8 +90,23 @@ public class CreditCardCalculatorApp extends JFrame {
 
         JButton runBtn = new JButton("Run Simulation");
         runBtn.addActionListener(e -> onRunSimulation());
-
-        top.add(openBtn);
+        
+        JButton visualizeBtn = new JButton("Visualize Payment Strategies");
+		visualizeBtn.addActionListener(e -> {
+			try {
+				JFrame frame = new JFrame("Payment Strategy Visualization");
+				frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+				frame.add(PaymentCategoryVisualizer.createChartPanel());
+				frame.pack();
+				frame.setLocationRelativeTo(this);
+				frame.setVisible(true);
+			} catch (Exception ex) {
+				JOptionPane.showMessageDialog(this, "Failed to create visualization: " + ex.getMessage(), "Error",
+						JOptionPane.ERROR_MESSAGE);
+			}
+		});
+		top.add(visualizeBtn);
+		top.add(openBtn);
         top.add(settingsBtn);
         top.add(runBtn);
 
